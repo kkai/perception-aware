@@ -1,0 +1,16 @@
+cat data/access_log.txt
+tail data/access_log.txt
+head -n 5 data/access_log.txt
+
+cat data/access_log.txt | head -n 5| awk '{print $4}'
+
+cat data/access_log.txt | head -n 5| awk '{print $4}' | sort | uniq
+
+cat data/access_log.txt | head -n 5| awk '{print $4}' | sort | uniq -c
+
+cat data/access_log.txt | head -n 5| awk '{print $4}' | sort | uniq -c | sort -rn 
+
+cat data/access_log.txt | awk '{print $4}' | sort | uniq -c | sort -rn 
+
+
+
