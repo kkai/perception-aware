@@ -1,0 +1,7 @@
+pear
+apple
+pear
+pear
+mango 
+spoon
+
