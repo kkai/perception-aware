@@ -135,3 +135,90 @@ def filter_fixations(time,x,y):
         fixation_y.append(fixation_value[a][3])
         
     return time, fixation_duration, fixation_x, fixation_y
+
+
+import pandas
+import numpy.linalg as lin
+from matplotlib.mlab import PCA
+import numpy as np
+import pandas
+from math import atan2, pi, degrees
+from numpy import var, mean, median
+
+def gb(x, y):
+    angle = degrees(atan2(y, x))
+    return angle
+
+
+def get_saccade_directions(d,x,y):
+    npd = np.array(d)
+    npx = np.array(x)
+    npy = np.array(y)
+    combined = np.vstack((npd, npx, npy)).T
+    mdatal = []
+    for d in combined:
+        mdatal.append({'len':d[0],'x':d[1],'y':d[2]})
+
+    as1 = []
+    as2 = []
+    as3 = []
+    as4 = []
+    for w in slidingWindow(mdatal,125,25):
+        s1,s2,s3,s4=calc_features(w)
+        as1.append(s1)
+        as2.append(s2)
+        as3.append(s3)
+        as4.append(s4)
+    return as1, as2, as3, as4
+
+def calc_features(eyegaze):
+    '''
+    calculate some features on an eye fixations
+    it assumes a dictionary with keys:
+    t = time
+    len = length of fixation
+    x = x coordinate of fixation
+    y = y coordinate of fixation
+    '''
+    data = pandas.DataFrame(eyegaze)
+    #remove mean
+    #diff between two points
+    d_d  = data.diff()
+    #calculate slope
+       #calculate the angles between two points (using the difference)
+    angles = []
+    for pt in [(d_d.x[i],d_d.y[i]) for i in range(1,len(d_d))]:
+        angles.append(gb(pt[0], pt[1]))
+    
+    d_a = pandas.DataFrame(angles)
+
+    #count angles between the given degrees
+    a1c = np.count_nonzero((d_a < -45.0) | (d_a <= 45.0))
+    a2c = np.count_nonzero(((d_a < 135) & (d_a <=180)) | ((d_a > -18.0) & (d_a <= 135.0)))
+    a3c = np.count_nonzero((d_a > 45.0) & (d_a < 180.0))
+    a4c = np.count_nonzero((d_a >= -45.0) & (d_a > 135.0))
+    return a1c, a2c, a3c, a4c    
+  
+
+def slidingWindow(sequence,winSize,step=1):
+    """Returns a generator that will iterate through
+    the defined chunks of input sequence.  Input sequence
+    must be iterable."""
+ 
+    # Verify the inputs
+    try: it = iter(sequence)
+    except TypeError:
+        raise Exception("**ERROR** sequence must be iterable.")
+    if not ((type(winSize) == type(0)) and (type(step) == type(0))):
+        raise Exception("**ERROR** type(winSize) and type(step) must be int.")
+    if step > winSize:
+        raise Exception("**ERROR** step must not be larger than winSize.")
+    if winSize > len(sequence):
+        raise Exception("**ERROR** winSize must not be larger than sequence length.")
+ 
+    # Pre-compute number of chunks to emit
+    numOfChunks = ((len(sequence)-winSize)/step)+1
+ 
+    # Do the work
+    for i in range(0,numOfChunks*step,step):
+        yield sequence[i:i+winSize]
